@@ -10,5 +10,5 @@ token = xxxxx
 ## 启动
 ```
 pip install -r requirements.txt
-python main.py &> /dev/null
+(python main.py &> /dev/null &)
 ```
