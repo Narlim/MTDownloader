@@ -2,6 +2,7 @@ import logging
 import aiohttp
 import re
 import os
+import random
 import configparser
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup 
 from telegram.ext import ContextTypes, CommandHandler, CallbackQueryHandler, Application
@@ -158,7 +159,10 @@ async def download_torrent(update: Update, context: ContextTypes.DEFAULT_TYPE, d
         async with session.get(download_url, headers=headers) as resp:
             if resp.status == 200:
                 cd = resp.headers.get("content-disposition")
-                file_name = re.split(r'[;=]', cd)[2].strip('" ').encode("ISO-8859-1").decode()
+                try:
+                    file_name = re.split(r'[;=]', cd)[2].strip('" ').encode("ISO-8859-1").decode()
+                except Exception as e:
+                    file_name = str(random.randint(100000, 999999)) + ".torrent"
                 if not os.path.exists(f"{download_dir}/{file_name}"):
                     with open(f"{download_dir}/{file_name}", "wb") as f:
                         async for chunk in resp.content.iter_chunked(1024):
