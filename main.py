@@ -72,6 +72,21 @@ async def info_template(update: Update, search_url, media_info_url, search_json,
                         await update.message.reply_photo(photo=image, caption=caption, reply_markup=reply_markup)
                     except Exception as e:
                         await update.message.reply_photo(photo="https://www.pttime.org/pic/err_img.png", caption=caption, reply_markup=reply_markup)
+
+
+async def promotion_or_not():
+    headers = {
+        "x-api-key":X_API_KEY
+    }
+    rules_url = URL + "/api/system/promotion/rules"
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url=rules_url, headers=headers) as resp:
+            if resp.status == 200:
+                result = await resp.json()
+                discount = result.get("data")[0].get("discount")
+                return discount == "FREE"
+            else:
+                logger.error("get rules failed.")
     
 
 async def get_free(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -93,12 +108,20 @@ async def get_free(update: Update, context: ContextTypes.DEFAULT_TYPE):
         pages = "3"
     if mode in ["normal", "adult", "movie", "tvshow", "waterfall", "rss", "rankings"]:
         if keyword == "free":
-            search_json = {
-                "mode":f"{mode}",
-                "pageSize": int(pages),
-                "discount":"FREE",
-                "sortField":"LEECHERS",
-            }
+            if await promotion_or_not():
+                search_json = {
+                    "mode":f"{mode}",
+                    "pageSize": int(pages),
+                    "promotionRule":"FREE",
+                    "sortField":"LEECHERS",
+                }
+            else:
+                search_json = {
+                    "mode":f"{mode}",
+                    "pageSize": int(pages),
+                    "discount":"FREE",
+                    "sortField":"LEECHERS",
+                }
             await info_template(update, search_url=search_url, media_info_url=media_info_url, search_json=search_json, headers=headers)
         elif mode == "rankings" and keyword == "all":
             search_json = {
