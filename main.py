@@ -83,7 +83,10 @@ async def promotion_or_not():
         async with session.post(url=rules_url, headers=headers) as resp:
             if resp.status == 200:
                 result = await resp.json()
-                discount = result.get("data")[0].get("discount")
+                try:
+                    discount = result.get("data")[0].get("discount")
+                except IndexError as e:
+                    discount = ""
                 return discount == "FREE"
             else:
                 logger.error("get rules failed.")
